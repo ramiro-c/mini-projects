@@ -18,7 +18,7 @@ export function smtpEmailSender(config: SmtpConfig): EmailSender {
 	return {
 		async send(email: Email) {
 			await transport.sendMail({
-				from: "noreply@mini-proyects.dev",
+				from: "noreply@mini-projects.dev",
 				to: email.to,
 				subject: email.subject,
 				text: email.body,

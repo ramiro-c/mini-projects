@@ -1,5 +1,5 @@
 {
-	"name": "mini-proyects",
+	"name": "mini-projects",
 	"version": "1.0.0",
 	"description": "Backend projects to learn production design patterns and microservices in practice.",
 	"main": "index.js",
@@ -12,16 +12,16 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ramiro-c/mini-proyects.git"
+		"url": "git+https://github.com/ramiro-c/mini-projects.git"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"type": "commonjs",
 	"bugs": {
-		"url": "https://github.com/ramiro-c/mini-proyects/issues"
+		"url": "https://github.com/ramiro-c/mini-projects/issues"
 	},
-	"homepage": "https://github.com/ramiro-c/mini-proyects#readme",
+	"homepage": "https://github.com/ramiro-c/mini-projects#readme",
 	"lint-staged": {
 		"*.{ts,tsx,json,js}": "biome check --write --unsafe",
 		"projects/01-adapter-email/**/*.ts": "vitest run --root projects/01-adapter-email"

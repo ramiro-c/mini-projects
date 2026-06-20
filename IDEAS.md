@@ -1,4 +1,4 @@
-# Mini proyects — backend patterns + microservicios
+# Mini projects — backend patterns + microservicios
 
 ## Setup base
 - Node.js + TypeScript

@@ -1,7 +1,7 @@
 # Root docker-compose — shared network and base services.
 # Each project under projects/ has its own docker-compose that extends this.
 
-name: mini-proyects
+name: mini-projects
 
 networks:
   backend:

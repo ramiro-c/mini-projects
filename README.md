@@ -1,4 +1,4 @@
-# mini-proyects
+# mini-projects
 
 Backend projects to learn production design patterns and microservices in practice.
 
