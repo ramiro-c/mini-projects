@@ -1,3 +1,7 @@
+> **Status:** Implemented (2026-06)
+> **Project:** `projects/01-adapter-email/`
+> **Superseded by:** `projects/01-adapter-email/README.md`
+
 # Project 01 — Adapter Email: Production Readiness
 
 ## Goal
@@ -163,3 +167,4 @@ type MachineConfig<S extends string, E extends string> = {
 - Template engine
 - Additional providers (SendGrid, Mailgun)
 - Rate limiting (project 02)
+

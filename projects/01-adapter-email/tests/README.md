@@ -4,10 +4,10 @@
 
 ```bash
 # Watch mode
-npm run test
+bun run test
 
 # Single run
-npm run test:run
+bun run test:run
 ```
 
 ## Test Structure
@@ -20,5 +20,5 @@ npm run test:run
 Para agregar coverage, instalar `@vitest/coverage-v8` y ejecutar:
 
 ```bash
-npx vitest run --coverage
+bunx vitest run --coverage
 ```

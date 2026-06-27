@@ -4,6 +4,12 @@ Sistema de pedidos event-driven con RabbitMQ, observabilidad completa y patrones
 de confiabilidad. Ver el diseño en
 `docs/superpowers/specs/2026-06-26-microservices-orders-event-driven-design.md`.
 
+## Documentación
+
+- Spec: `docs/superpowers/specs/2026-06-26-microservices-orders-event-driven-design.md`
+- Plan fase 0: `docs/superpowers/plans/2026-06-26-microservices-orders-phase-0-infra.md`
+- SDD: `.superpowers/sdd/progress.md`
+
 ## Estado: Fase 0 — Infra
 
 Levanta la infraestructura base y el wrapper de mensajería.
@@ -73,11 +79,12 @@ topología base.
   mensajes que fallan tras los reintentos caen acá en vez de perderse. Es fanout para que
   **todo** dead-letter llegue a la DLQ sin depender de la routing key.
 
-## Próximas fases
+## Fases
 
-| Fase | Qué se construye |
-|------|------------------|
-| 1 — Coreografía | 4 servicios reaccionando a eventos; outbox + idempotencia + DLQ/retries; tracing y métricas vía `shared`. |
-| 2 — Dashboards | Dashboards de Grafana (latencia, throughput, profundidad de colas) + métricas de negocio. |
-| 3 — Orquestación | `orchestrator-service`: saga dirigida con compensaciones. |
-| 4 — Fallos + demo | Inyección de fallos + demo guiada + documentación completa. |
+| Estado | Fase | Qué se construye |
+|---|---|---|
+| [x] | 0 — Infra | RabbitMQ + Prometheus + Grafana + Jaeger, más el wrapper base de `shared`. |
+| [ ] | 1 — Coreografía | 4 servicios reaccionando a eventos; outbox + idempotencia + DLQ/retries; tracing y métricas vía `shared`. |
+| [ ] | 2 — Dashboards | Dashboards de Grafana (latencia, throughput, profundidad de colas) + métricas de negocio. |
+| [ ] | 3 — Orquestación | `orchestrator-service`: saga dirigida con compensaciones. |
+| [ ] | 4 — Fallos + demo | Inyección de fallos + demo guiada + documentación completa. |

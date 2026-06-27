@@ -2,6 +2,11 @@
 
 Implementation of the **Adapter** pattern for email providers, with **Decorator** extensions (logging, retry, circuit breaker) and a **State Machine** for circuit breaker lifecycle.
 
+## Documentation
+
+- Spec archivado: `docs/superpowers/archive/2026-06-06-adapter-email-production-readiness/spec.md`
+- Backlog: `BACKLOG.md`
+
 ## Stack
 
 - **Node.js** + **TypeScript**

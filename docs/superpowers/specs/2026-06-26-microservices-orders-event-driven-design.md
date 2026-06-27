@@ -1,35 +1,32 @@
-# Microservicios con eventos — pedidos de e-commerce
+# Microservices with Events - E-commerce Orders
 
-**Fecha:** 2026-06-26
-**Proyecto:** `projects/02-microservices-orders/`
-**Objetivo de aprendizaje:** entender de verdad microservicios event-driven — colas (RabbitMQ),
-patrones de confiabilidad de mensajería, observabilidad distribuida y orquestación de Docker.
+**Date:** 2026-06-26
+**Project:** `projects/02-microservices-orders/`
+**Learning goal:** understand event-driven microservices for real - queues (RabbitMQ), messaging reliability patterns, distributed observability, and Docker orchestration.
 
 ---
 
-## 1. Resumen
+## 1. Summary
 
-Sistema de pedidos de e-commerce donde varios servicios se comunican **por eventos** vía RabbitMQ.
-Se construye en fases: primero **coreografía** (cada servicio reacciona a eventos sin un coordinador
-central), después se agrega un **orquestador** (saga con compensaciones) para comparar ambos enfoques
-con datos reales. Observabilidad completa desde el inicio (logs, métricas, tracing distribuido).
-Todo gratis, local y dockerizado.
+An e-commerce orders system where multiple services communicate **through events** over RabbitMQ.
+The project is built in phases: first **choreography** (each service reacts to events without a central coordinator), then a **coordinator** is added (saga with compensations) so both approaches can be compared with real data. Full observability from the start (logs, metrics, distributed tracing).
+Everything is free, local, and Dockerized.
 
-### Decisiones tomadas
+### Decisions made
 
-| Tema | Decisión |
+| Topic | Decision |
 |------|----------|
-| Dominio | E-commerce: pedidos |
+| Domain | E-commerce: orders |
 | Broker | RabbitMQ (topic exchange + dead-letter exchange) |
-| Coordinación | Coreografía (fase 1) **y** orquestación (fase 3), en fases para comparar |
-| Observabilidad | Stack completo: pino (logs) + Prometheus/Grafana (métricas) + OpenTelemetry/Jaeger (tracing) |
-| Confiabilidad | DLQ + retries, idempotencia, outbox pattern, inyección de fallos para demo |
-| Estructura | Monorepo con paquete `shared` (bun workspaces) |
-| Stack base | Node.js + TypeScript, bun, SQLite (DB por servicio), Docker Compose |
+| Coordination | Choreography (phase 1) **and** orchestration (phase 3), introduced in phases for comparison |
+| Observability | Full stack: pino (logs) + Prometheus/Grafana (metrics) + OpenTelemetry/Jaeger (tracing) |
+| Reliability | DLQ + retries, idempotency, outbox pattern, fault injection for demos |
+| Structure | Monorepo with a `shared` package (bun workspaces) |
+| Base stack | Node.js + TypeScript, bun, SQLite (DB per service), Docker Compose |
 
 ---
 
-## 2. Arquitectura
+## 2. Architecture
 
 ```
                                   ┌─────────────────────────────────────┐
@@ -50,31 +47,30 @@ Todo gratis, local y dockerizado.
   Observabilidad (mismo compose):  Prometheus ── Grafana    OTel ── Jaeger    pino → stdout
 ```
 
-### Principios
+### Principles
 
-- **Database-per-service:** cada servicio tiene su propia SQLite. Ningún servicio lee/escribe la DB de otro.
-- **Topic exchange:** routing por routing-key (`order.created`, `payment.approved`, `payment.failed`,
-  `stock.reserved`, `stock.failed`, etc.). Cada servicio bindea las colas que le interesan.
-- **Dead-letter exchange (DLX):** los mensajes que fallan tras los retries van a una cola de dead-letter
-  visible en la UI de management, en vez de perderse.
-- **Coreografía (fase 1):** no hay coordinador. El flujo emerge de los eventos.
-- **Orquestación (fase 3):** `orchestrator-service` dirige la saga y ejecuta compensaciones ante fallos.
+- **Database-per-service:** each service owns its own SQLite database. No service reads or writes another service's DB.
+- **Topic exchange:** routing by routing key (`order.created`, `payment.approved`, `payment.failed`,
+  `stock.reserved`, `stock.failed`, etc.). Each service binds the queues it cares about.
+- **Dead-letter exchange (DLX):** messages that fail after retries go to a visible dead-letter queue instead of being lost.
+- **Choreography (phase 1):** there is no coordinator. The flow emerges from the events themselves.
+- **Orchestration (phase 3):** `orchestrator-service` drives the saga and executes compensations on failures.
 
-### Servicios
+### Services
 
-| Servicio | Responsabilidad | Eventos que emite |
-|----------|-----------------|-------------------|
-| `order-service` | Recibe `POST /orders`, persiste el pedido, emite el evento vía outbox | `OrderCreated` |
-| `payment-service` | Escucha `OrderCreated`, simula cobro | `PaymentApproved` / `PaymentFailed` |
-| `inventory-service` | Reserva stock | `StockReserved` / `StockFailed` |
-| `notification-service` | Consume eventos terminales, "envía" notificación (log) | — |
-| `orchestrator-service` (fase 3) | Dirige la saga, ejecuta compensaciones | comandos + eventos de saga |
+| Service | Responsibility | Events emitted |
+|----------|-----------------|----------------|
+| `order-service` | Receives `POST /orders`, persists the order, emits the event through outbox | `OrderCreated` |
+| `payment-service` | Listens to `OrderCreated`, simulates payment | `PaymentApproved` / `PaymentFailed` |
+| `inventory-service` | Reserves stock | `StockReserved` / `StockFailed` |
+| `notification-service` | Consumes terminal events, "sends" notification (log) | — |
+| `orchestrator-service` (phase 3) | Drives the saga, executes compensations | saga commands + events |
 
 ---
 
-## 3. Estructura del repo
+## 3. Repo structure
 
-Monorepo dentro de `projects/02-microservices-orders/` usando **bun workspaces**.
+Monorepo inside `projects/02-microservices-orders/` using **bun workspaces**.
 
 ```
 02-microservices-orders/
@@ -96,57 +92,54 @@ Monorepo dentro de `projects/02-microservices-orders/` usando **bun workspaces**
     └── orchestrator-service/  # fase 3
 ```
 
-**Clave didáctica:** los wrappers `messaging` y `telemetry` instrumentan automáticamente cada
-publish/consume — el trace context se propaga por headers de RabbitMQ y las métricas se emiten sin
-código repetido. Así el tracing distribuido "simplemente funciona" en todos los servicios.
+**Didactic key:** the `messaging` and `telemetry` wrappers instrument every publish/consume automatically - trace context is propagated through RabbitMQ headers and metrics are emitted without repeated code. Distributed tracing "just works" across all services.
 
 ---
 
-## 4. Patrones de confiabilidad
+## 4. Reliability patterns
 
-| Patrón | Cómo se implementa | Qué demuestra |
-|--------|--------------------|---------------|
-| **DLQ + retries** | Retries con backoff; tras N intentos el mensaje va al DLX. | Mensajes que fallan no se pierden; visibles en la UI de RabbitMQ. |
-| **Idempotencia** | Cada consumer guarda en SQLite los IDs de eventos ya procesados; un reintento no reprocesa. | Un retry no cobra ni descuenta stock dos veces. |
-| **Outbox pattern** | El servicio escribe el evento en su DB en la misma transacción que el cambio de negocio; un relay lo publica a RabbitMQ. | No se pierden eventos si el broker está caído al momento del commit. |
-| **Inyección de fallos** | Flag/config que hace fallar o colgar `payment-service` de forma controlada. | Dispara DLQs, retries y (en fase 3) compensaciones para verlos actuar. |
-
----
-
-## 5. Observabilidad
-
-- **Logs:** pino estructurado a stdout, con `traceId` correlacionado.
-- **Métricas:** cada servicio expone `/metrics` (Prometheus). Dashboards de Grafana con latencia,
-  throughput, profundidad de colas, tasa de errores y métricas de negocio (pedidos por estado).
-- **Tracing:** OpenTelemetry propaga el contexto por los headers de los mensajes; Jaeger muestra el
-  waterfall de un pedido cruzando los servicios.
+| Pattern | How it is implemented | What it demonstrates |
+|--------|------------------------|-----------------------|
+| **DLQ + retries** | Retries with backoff; after N attempts the message goes to the DLX. | Failed messages are not lost; they stay visible in RabbitMQ. |
+| **Idempotency** | Each consumer stores processed event IDs in SQLite; a retry does not reprocess them. | A retry does not charge or reserve stock twice. |
+| **Outbox pattern** | The service writes the event to its DB in the same transaction as the business change; a relay publishes it to RabbitMQ. | Events are not lost if the broker is down at commit time. |
+| **Fault injection** | A flag/config makes `payment-service` fail or hang in a controlled way. | Triggers DLQs, retries, and later compensations so they can be observed. |
 
 ---
 
-## 6. Plan de fases
+## 5. Observability
 
-Cada fase corre y se demuestra sola. No se avanza hasta que la anterior funcione.
-
-| Fase | Qué se construye | Criterio de "listo" |
-|------|------------------|---------------------|
-| **0 — Infra** | `docker-compose.yml` levanta RabbitMQ + Prometheus + Grafana + Jaeger. Paquete `shared` con los wrappers base. | `docker compose up` y todo verde; UIs de RabbitMQ, Grafana y Jaeger accesibles. |
-| **1 — Coreografía** | Los 4 servicios reaccionando a eventos. Outbox + idempotencia + DLQ/retries desde el inicio. Tracing y métricas integrados vía `shared`. | Se manda un pedido y se sigue cruzando 4 servicios en Jaeger; las colas se ven moverse en RabbitMQ. |
-| **2 — Dashboards** | Dashboards de Grafana (latencia, throughput, profundidad de colas, errores) + métricas de negocio. | Panel donde se ve el sistema "respirar" bajo carga. |
-| **3 — Orquestación** | `orchestrator-service`: misma saga pero dirigida, con compensaciones (reembolso, liberar stock). | Comparación coreografía vs orquestación con datos reales. |
-| **4 — Fallos + demo + docu** | Inyección de fallos + demo guiada + documentación completa (teoría + diagramas). | Se disparan fallos y se ven DLQ, retries y compensaciones actuar; README didáctico. |
+- **Logs:** structured pino output to stdout, with correlated `traceId`.
+- **Metrics:** each service exposes `/metrics` (Prometheus). Grafana dashboards show latency,
+  throughput, queue depth, error rate, and business metrics (orders by status).
+- **Tracing:** OpenTelemetry propagates context through message headers; Jaeger shows the waterfall
+  of an order crossing services.
 
 ---
 
-## 7. No incluido (YAGNI)
+## 6. Phase plan
 
-- Kafka / event sourcing / replay de eventos (sobra para el objetivo de aprendizaje).
-- Autenticación / API gateway (otro mini-proyecto del repo lo cubre).
-- Deploy a la nube (todo es local y gratis por diseño).
-- Frontend (la demo se maneja por HTTP + las UIs de observabilidad).
+Each phase runs and is demonstrated on its own. We do not move forward until the previous one works.
+
+| Phase | What is built | "Done" criterion |
+|------|----------------|------------------|
+| **0 - Infra** | `docker-compose.yml` brings up RabbitMQ + Prometheus + Grafana + Jaeger. `shared` contains the base wrappers. | `docker compose up` is green; RabbitMQ, Grafana, and Jaeger UIs are reachable. |
+| **1 - Choreography** | The 4 services react to events. Outbox + idempotency + DLQ/retries are present from the start. Tracing and metrics are integrated through `shared`. | Submit an order and watch it cross 4 services in Jaeger; the queues visibly move in RabbitMQ. |
+| **2 - Dashboards** | Grafana dashboards (latency, throughput, queue depth, errors) + business metrics. | A panel shows the system breathing under load. |
+| **3 - Orchestration** | `orchestrator-service`: same saga, but directed, with compensations (refund, release stock). | Choreography vs orchestration can be compared with real data. |
+| **4 - Failures + demo + docs** | Fault injection + guided demo + complete documentation (theory + diagrams). | Failures are triggered and DLQ, retries, and compensations can be observed; README is teaching-friendly. |
 
 ---
 
-## 8. Implementación
+## 7. Not included (YAGNI)
 
-Se usarán **subagentes en paralelo** donde aporte: scaffolding de servicios que comparten estructura
-y redacción de documentación por sección. El plan detallado se arma con la skill `writing-plans`.
+- Kafka / event sourcing / event replay (too much for the learning goal).
+- Authentication / API gateway (covered by another mini-project in the repo).
+- Cloud deployment (everything is local and free by design).
+- Frontend (the demo is handled through HTTP + observability UIs).
+
+---
+
+## 8. Implementation
+
+We will use **parallel subagents** where it helps: scaffolding services with shared structure and writing documentation by section. The detailed plan is assembled with the `writing-plans` skill.
