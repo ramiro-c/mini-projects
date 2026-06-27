@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { connect, type MessagingConnection } from "../src/messaging/connection.js";
-import { assertTopology } from "../src/messaging/topology.js";
-import { TOPOLOGY } from "../src/messaging/topology.js";
+import { assertTopology, TOPOLOGY } from "../src/messaging/topology.js";
 
 describe("messaging connection", () => {
 	let conn: MessagingConnection;

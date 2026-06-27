@@ -7,5 +7,6 @@ export const TOPOLOGY = {
 
 export async function assertTopology(channel: Channel): Promise<void> {
 	await channel.assertExchange(TOPOLOGY.exchange, "topic", { durable: true });
-	await channel.assertExchange(TOPOLOGY.deadLetterExchange, "topic", { durable: true });
+	// fanout: every dead-lettered message lands in the DLQ regardless of routing key
+	await channel.assertExchange(TOPOLOGY.deadLetterExchange, "fanout", { durable: true });
 }

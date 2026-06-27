@@ -14,7 +14,7 @@ describe("infra smoke", () => {
 			if (ep.auth) {
 				headers.Authorization = `Basic ${Buffer.from(ep.auth).toString("base64")}`;
 			}
-			const res = await fetch(ep.url, { headers });
+			const res = await fetch(ep.url, { headers, signal: AbortSignal.timeout(3000) });
 			expect(res.status).toBe(200);
 		});
 	}
